@@ -14,7 +14,7 @@ export default class Gauge extends Component {
     container: {
       position: 'relative',
       minWidth: 300,
-      maxWidth: 600,
+      maxWidth: 800,
       minHeight: 300,
       border: '1px solid black',
       borderRadius: 4,
@@ -54,7 +54,7 @@ export default class Gauge extends Component {
 
   constructor(props) {
     super(props);
-    this.state = {reverse: false, width: 612};
+    this.state = {reverse: false, width: 812};
   }
 
   componentDidMount() {
@@ -102,7 +102,7 @@ export default class Gauge extends Component {
     return (
       <div>
         <WindGauge value={this.props.value}
-          width={this.state.width - 12} height={400} background={['#022f2c', '#479791']} />
+          width={800} height={450} background={['#022f2c', '#479791']} />
         {this.renderSparkline()}
         <div style={Gauge.style.label}>{this.props.label}</div>
       </div>
