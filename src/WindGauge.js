@@ -70,39 +70,40 @@ export default class LiquidGauge extends Component {
 
     let el = React.findDOMNode(this);
 
-    let {width, height, background, lineColor} = this.props;
+    let {width, height, background, lineColor, textColor} = this.props;
 
     while (el.firstChild) {
       el.removeChild(el.firstChild);
     }
 
-    var svg = d3.select(el).append("svg")
-        .attr("width", width)
-        .attr("height", height);
+    let svg = d3.select(el).append("svg")
+      .attr("width", width)
+      .attr("height", height);
 
-    var gradient = svg.append("defs")
+    let gradient = svg.append("defs")
       .append("linearGradient")
         .attr("id", "gradient")
-        .attr("x1", "0%")
+        .attr("x1", "100%")
         .attr("y1", "0%")
-        .attr("x2", "100%")
+        .attr("x2", "0%")
         .attr("y2", "0%")
         .attr("spreadMethod", "pad");
 
     gradient.append("stop")
-        .attr("offset", "0%")
-        .attr("stop-color", background[0])
-        .attr("stop-opacity", 1);
+      .attr("offset", "0%")
+      .attr("stop-color", background[0])
+      .attr("stop-opacity", 1);
 
     gradient.append("stop")
-        .attr("offset", "100%")
-        .attr("stop-color", background[1])
-        .attr("stop-opacity", 1);
+      .attr("offset", "100%")
+      .attr("stop-color", background[1])
+      .attr("stop-opacity", 1);
 
     svg.append("rect")
-        .attr("width", width)
-        .attr("height", height)
-        .style("fill", "url(#gradient)");
+      .attr("width", width)
+      .attr("height", height)
+      //.style("fill", "url(#gradient)");
+      .style("fill", "black");
 
     let divider = [{x: 0.6 * width, y: 0 * height / 3},
                    {x: 0.7 * width, y: 1 * height / 3},
@@ -137,6 +138,110 @@ export default class LiquidGauge extends Component {
       .attr("stroke", lineColor)
       .attr("stroke-width", 4)
       .attr("fill", "none");
+
+    const boxWidth = 0.35 * width,
+          mBoxWidth = 0.30 * width,
+          boxHeight=  height / 3,
+          boxX = 0.65 * width,
+          mBoxX = 0.7 * width;
+
+
+    drawDataBox(boxX,  0 * height / 3, boxWidth,  boxHeight, 123, 123, "KTS", "BSPD");
+    drawDataBox(mBoxX, 1 * height / 3, mBoxWidth, boxHeight, 123, 123, "\u00B0", "AWA");
+    drawDataBox(boxX,  2 * height / 3, boxWidth,  boxHeight, 123, 123, "KTS", "AWS");
+
+    function drawDataBox(x, y, w, h, val, tgt, units, measure) {
+//
+//      let box = svg.append("rect")
+//        .attr("x", x)
+//        .attr("y", y)
+//        .attr("width", w)
+//        .attr("height", h)
+//        .attr("rx", 3)
+//        .attr("ry", 3)
+//        .attr("fill", "none")
+//        .attr("stroke", lineColor)
+//        .attr("stroke-width", 2);
+
+      const valSize = 75,
+            subSize = 24,
+            unitSize = units === '\u00B0' ? 48 : 24,
+            padding = 20;
+
+      let unitText = svg.append("text")
+        .attr("x", x + w - 2 * padding)
+        .attr("y", y + padding + 2 * subSize)
+        .attr("font-family", "Century Gothic")
+        .attr("text-anchor", "end")
+        .attr("fill", textColor)
+        .attr("font-size", unitSize)
+        .text(units);
+
+      let w1 = unitText.node().getBBox().width;
+
+      let valueText = svg.append("text")
+        .attr("x", x + w - w1 - 2 * padding)
+        .attr("y", y + padding + valSize)
+        .attr("text-anchor", "end")
+        .attr("fill", textColor)
+        .attr("font-size", valSize)
+        .text(val);
+
+      let subText = svg.append("text")
+        .attr("x", 0)
+        .attr("y", y + h / 2)
+        .attr("font-size", subSize)
+        .attr("fill", textColor)
+        .attr("text-anchor", "middle")
+        .attr("transform", "translate(0," + measure.length * -10 + ")")
+        .selectAll("tspan")
+          .data(measure.split(''))
+          .enter().append("tspan")
+            .attr("x", x + w - padding)
+            .attr("dy", "0.8em")
+            .text(function(d) { return d});
+
+      let tgtText = svg.append("text")
+        .attr("x", x + w - 2 * padding)
+        .attr("y", y + h - padding / 2)
+        .attr("fill", textColor)
+        .attr("text-anchor", "end")
+        .text(tgt);
+
+      let w2 = tgtText.node().getBBox().width;
+
+      let tgtLbl = svg.append("text")
+        .attr("x", x + w - w2 - 25 - 2 * padding)
+        .attr("y", y + h - padding / 2)
+        .attr("fill", textColor)
+        .attr("text-anchor", "end")
+        .text("Target:");
+
+      if(tgt >= val) {
+        triangle(x + w - w2 - 20 - 2 * padding, y + h - padding / 2, 18, 18, 'up');
+      } else {
+        triangle(x + w - w2 - 20 - 2 * padding, y + h - padding / 2, 18, 18, 'dn');
+      }
+    }
+
+    function triangle(x, y, w, h, dir) {
+      var tx, ty, rx;
+      tx = x + w / 2;
+      if(dir == 'up') {
+        ty = y - h;
+      } else {
+        ty = y;
+        y -= h;
+      }
+      rx = x + w;
+
+      var tPoints = [{x:tx, y:ty}, {x:x, y:y}, {x:rx, y:y}];
+
+      svg.append("path")
+        .attr("d", lineFunction(tPoints) + "Z")
+        .attr("fill", textColor);
+
+    }
 
     function GaugeUpdater() {
       this.update = function(value) {
