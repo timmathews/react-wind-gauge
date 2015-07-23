@@ -80,30 +80,10 @@ export default class LiquidGauge extends Component {
       .attr("width", width)
       .attr("height", height);
 
-    let gradient = svg.append("defs")
-      .append("linearGradient")
-        .attr("id", "gradient")
-        .attr("x1", "100%")
-        .attr("y1", "0%")
-        .attr("x2", "0%")
-        .attr("y2", "0%")
-        .attr("spreadMethod", "pad");
-
-    gradient.append("stop")
-      .attr("offset", "0%")
-      .attr("stop-color", background[0])
-      .attr("stop-opacity", 1);
-
-    gradient.append("stop")
-      .attr("offset", "100%")
-      .attr("stop-color", background[1])
-      .attr("stop-opacity", 1);
-
     svg.append("rect")
       .attr("width", width)
       .attr("height", height)
-      //.style("fill", "url(#gradient)");
-      .style("fill", "black");
+      .style("fill", "#333");
 
     let divider = [{x: 0.6 * width, y: 0 * height / 3},
                    {x: 0.7 * width, y: 1 * height / 3},
@@ -150,19 +130,9 @@ export default class LiquidGauge extends Component {
     drawDataBox(mBoxX, 1 * height / 3, mBoxWidth, boxHeight, 123, 123, "\u00B0", "AWA");
     drawDataBox(boxX,  2 * height / 3, boxWidth,  boxHeight, 123, 123, "KTS", "AWS");
 
-    function drawDataBox(x, y, w, h, val, tgt, units, measure) {
-//
-//      let box = svg.append("rect")
-//        .attr("x", x)
-//        .attr("y", y)
-//        .attr("width", w)
-//        .attr("height", h)
-//        .attr("rx", 3)
-//        .attr("ry", 3)
-//        .attr("fill", "none")
-//        .attr("stroke", lineColor)
-//        .attr("stroke-width", 2);
+    drawCircle(45);
 
+    function drawDataBox(x, y, w, h, val, tgt, units, measure) {
       const valSize = 75,
             subSize = 24,
             unitSize = units === '\u00B0' ? 48 : 24,
@@ -241,6 +211,78 @@ export default class LiquidGauge extends Component {
         .attr("d", lineFunction(tPoints) + "Z")
         .attr("fill", textColor);
 
+    }
+
+    function drawCircle(heading, targetHeading, trueWindAngle, apparentWindAngle) {
+      const originX = width / 3,
+            originY = height / 2,
+            radius  = Math.min(originX, originY) - 35;
+
+      const g = svg.append("g")
+        .attr("transform", "translate(" + originX + "," + originY + ") rotate(" + heading  + ")");
+
+
+      g.append("circle")
+        .attr("r", radius)
+        .attr("stroke", lineColor)
+        .attr("stroke-width", 4)
+        .attr("fill", "none");
+
+      for(let i = 0; i < 64; i++) {
+        let tickLength = 10;
+        let tickWidth = 1;
+
+        if(i % 16 == 0) {
+          tickLength = 30;
+        } else if(i % 8 == 0) {
+          tickLength = 25;
+        } else if(i % 4 == 0) {
+          tickLength = 20;
+          tickWidth = 2;
+        } else if(i % 2 == 0) {
+          tickLength = 15;
+        }
+
+        let tickAngle = i * Math.PI / 32;
+
+        const tickPath = [
+          {x: -Math.cos(tickAngle) * radius,
+           y: -Math.sin(tickAngle) * radius},
+          {x: -Math.cos(tickAngle) * (radius - tickLength),
+           y: -Math.sin(tickAngle) * (radius - tickLength)}
+        ];
+
+        g.append("path")
+          .attr("d", lineFunction(tickPath))
+          .attr("stroke", lineColor)
+          .attr("stroke-width", tickWidth)
+          .attr("fill", "none");
+      }
+
+      g.append("text").text("N")
+        .attr("fill", lineColor)
+        .attr("font-size", "20pt")
+        .attr("text-anchor", "middle")
+        .attr("transform", "translate(0," + -(radius + 5) + ")");
+
+      g.append("text").text("S")
+        .attr("fill", lineColor)
+        .attr("font-size", "20pt")
+        .attr("text-anchor", "middle")
+        .attr("transform", "translate(0," + (radius + 5) + ") rotate(180)");
+
+      let east = g.append("text").text("E")
+        .attr("fill", lineColor)
+        .attr("font-size", "20pt")
+        .attr("text-anchor", "middle")
+        .attr("transform", "translate(" + (radius + 5) + ",0) rotate(90)");
+
+
+      g.append("text").text("W")
+        .attr("fill", lineColor)
+        .attr("font-size", "20pt")
+        .attr("text-anchor", "middle")
+        .attr("transform", "translate(" + -(radius + 5) + ",0) rotate(270)");
     }
 
     function GaugeUpdater() {
